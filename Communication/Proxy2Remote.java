@@ -8,8 +8,7 @@ import Proxy.Session;
 public class Proxy2Remote extends Thread {
 
 	private static Socket remoteSocket;
-	private static DataInputStream inputStream;
-	private static DataOutputStream outputStream;
+	private static InputStream inputStream;
 	private static Session sessionManager;
 	public Proxy2Remote(Socket entrada, Session session)
 	{
@@ -20,31 +19,19 @@ public class Proxy2Remote extends Thread {
 	{
 		try {
 			inputStream = new DataInputStream(remoteSocket.getInputStream());
-			outputStream = new DataOutputStream(remoteSocket.getOutputStream());
 			while(true) {
-				byte[] b = new byte[inputStream.available()];
-				if(b.length > 0) {
-					for(int i =0; i < b.length; i++)
-					{
-						b[i] = (byte)inputStream.read();
+				byte[] buffer = new byte[inputStream.available()];
+				if(buffer.length > 0) {
+					for(int i =0; i < buffer.length; i++) {
+						buffer[i] = (byte)inputStream.read();
 					}
-					String data = new String(b);
-					//Recibe el resultado de la peticion del servidor remoto
-					sessionManager.Proxy2Client(b);
-					System.out.println("RESPUESTA ENVIADA AL CLIENTE");
+					sessionManager.client2ProxOutput.write(buffer);
+					System.out.println("[Proxy2Remote] -> " + buffer.length);
 				}
-				Thread.sleep(200);
+				Thread.sleep(1);
 			}
 		}catch (Exception e) {
-			System.out.println("Read[client2proxinput] - > " + e.toString());
-		}
-	}
-	public static void sendProxy2Server(byte[] b)
-	{
-		try {
-			outputStream.write(b);
-		}catch (Exception e) {
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 	}
 }
